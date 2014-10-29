@@ -11,10 +11,12 @@ It is a good idea to run this on every mesos slave.
 ## Usage
 
 ```
-docker run -d --net=host -e RELOAD_TTL=10 -e DISCOVERY_URL=localhost:8080 bobrik/marathon-tcp-haproxy
+docker run -d --net=bridge -e RELOAD_TTL=10 quay.io/appuri/marathon-tcp-haproxy
 ```
 
 Here `RELOAD_TTL` is interval to check marathon for new port mappings
-and `DISCOVERY_URL` is marathon host and port.
+and `DISCOVERY_PORT` is marathon port to connect to.
+and `DISCOVERY_HOST` is marathon host to connect to.
 
-You can also set `HAPROXY_HOST` to specify ip address for haproxy (`127.0.0.1` by default).
+
+`HAPROXY_HOST` is derived from /etc/ip value, this file with host port must be available in container

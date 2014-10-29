@@ -1,11 +1,16 @@
 #!/bin/bash
 
 set -e
-
 run_command() {
   echo "Running $1"
   bash -c "$1" 2>&1 &
   HAPROXY_PID="$!"
+}
+
+find_marathon () {
+  DISCOVERY_HOST=$(/usr/bin/fleetctl list-units | gawk '/marathon/ {r = gensub(/.*\/(.*)/,"\\1", "g", $2); print r}')
+  DISCOVERY_URL="${DISCOVERY_HOST}:${DISCOVERY_PORT}"
+  echo "Detected DISCOVERY_URL: ${DISCOVERY_URL}"
 }
 
 reload_conf() {
@@ -13,7 +18,8 @@ reload_conf() {
   MARATHON_AVAILABLE=1
   haproxy_dns_cfg $DISCOVERY_URL > /etc/haproxy/haproxy.cfg.next || MARATHON_AVAILABLE=0
   if [ $MARATHON_AVAILABLE -ne 1 ]; then
-      echo "Marathon is not available"
+      echo "Marathon is not available, detecting marathon"
+      find_marathon
       return
   fi
 
@@ -36,5 +42,6 @@ onexit() {
 }
 trap onexit SIGINT SIGTERM EXIT
 
+find_marathon
 run_command "haproxy -f /etc/haproxy/haproxy.cfg"
 while true; do reload_conf; sleep $RELOAD_TTL; done
